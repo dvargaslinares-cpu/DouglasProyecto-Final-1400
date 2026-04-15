@@ -30,10 +30,12 @@ class ServicioTecnico:
             except Exception as e:
                 print("[Servicio Técnico]: Error controlado:", e)
 
-            salir = input(f"\n[Servicio Técnico]: ¿Desea continuar, {self.cliente}? (s/n): ")
-            if salir.lower() != "s":
-                print(f"[Servicio Técnico]: Gracias por usar el sistema, {self.cliente}")
-                break
+    def continuar(self):
+        opcion = input(f"\n[Servicio Técnico]: {self.cliente}, ¿desea algo más? (s/n): ")
+        if opcion.lower() != "s":
+            print(f"[Servicio Técnico]: Gracias por su visita, {self.cliente}")
+            return False
+        return True
 
     def menu(self):
         print("\n=== Servicio Técnico Pro ===")
@@ -44,7 +46,6 @@ class ServicioTecnico:
         print("3️⃣ Donar")
         return input(f"[{self.cliente}]: ")
 
-    # Validar año
     def pedir_año(self):
         while True:
             try:
@@ -52,7 +53,7 @@ class ServicioTecnico:
             except ValueError:
                 print("[Servicio Técnico]: Ingrese un número válido")
 
-    # Revisar
+    # 🔹 REVISAR
     def revisar(self):
         print(f"\n[Servicio Técnico]: {self.cliente}, vamos a revisar su dispositivo")
 
@@ -61,9 +62,6 @@ class ServicioTecnico:
         modelo = input(f"{self.cliente}, ingrese el modelo: ")
         año = self.pedir_año()
         problema = input(f"{self.cliente}, describa el problema: ")
-
-        horas = 1
-        costo = horas * COSTO_POR_HORA
 
         datos = {
             "id": int(time.time()),
@@ -74,14 +72,26 @@ class ServicioTecnico:
             "modelo": modelo,
             "año": año,
             "problema": problema,
-            "horas": horas,
-            "costo_total": costo
+            "horas": 1,
+            "costo_total": COSTO_POR_HORA
         }
 
-        self.guardar(datos)
         self.informe(datos)
 
-    # Reparar (flujo completo con ticket)
+        print(f"\n[Servicio Técnico]: {self.cliente}, se recomienda proceder con la reparación.")
+        print(f"[Servicio Técnico]: El costo puede variar según el diagnóstico final.")
+
+        continuar = input(f"{self.cliente}, ¿desea continuar con la reparación? (s/n): ")
+
+        if continuar.lower() == "s":
+            self.reparar()
+        else:
+            print(f"[Servicio Técnico]: Puede retirar su equipo cuando lo desee, {self.cliente}")
+
+        if not self.continuar():
+            sys.exit()
+
+    # 🔹 REPARAR
     def reparar(self):
         print(f"\n[Servicio Técnico]: {self.cliente}, seleccione el tipo de reparación")
         print("1. Pantalla")
@@ -105,7 +115,6 @@ class ServicioTecnico:
         else:
             problema, horas = "No enciende", 3
 
-        # Traslado
         print(f"\n[Servicio Técnico]: {self.cliente}, seleccione el método de entrega")
         print("1. Llevar equipo (Gratis)")
         print("2. Recogida a domicilio ($10)")
@@ -137,31 +146,26 @@ class ServicioTecnico:
             "problema": problema,
             "horas": horas,
             "traslado": tipo_traslado,
-            "costo_traslado": costo_traslado,
             "costo_estimado": costo_total
         }
 
-        # INFORME
         self.informe(datos)
 
-        # AVISO
-        print(f"\n[Servicio Técnico]: {self.cliente}, el monto final puede variar después de la revisión o mantenimiento.")
+        print(f"\n[Servicio Técnico]: {self.cliente}, el monto final puede variar.")
 
         confirmar = input(f"{self.cliente}, ¿desea continuar? (s/n): ")
         if confirmar.lower() != "s":
             print(f"[Servicio Técnico]: Operación cancelada, {self.cliente}")
             return
 
-        # ENTREGA / TICKET
         if traslado == "1":
             fecha = input(f"{self.cliente}, ¿cuándo traerá el equipo?: ")
-
             ticket = int(time.time())
+
             print(f"\n[Servicio Técnico]: {self.cliente}, su número de ticket es: {ticket}")
 
             datos["ticket"] = ticket
-            datos["fecha_acordada"] = fecha
-            datos["nota"] = "El costo puede variar según diagnóstico final"
+            datos["fecha"] = fecha
 
             self.guardar(datos)
 
@@ -172,13 +176,13 @@ class ServicioTecnico:
 
         else:
             fecha = input(f"{self.cliente}, indique la fecha de recogida: ")
-
-            datos["fecha_acordada"] = fecha
-            datos["nota"] = "El costo puede variar según diagnóstico final"
-
+            datos["fecha"] = fecha
             self.guardar(datos)
 
-    # Donar
+        if not self.continuar():
+            sys.exit()
+
+    # 🔹 DONAR
     def donar(self):
         print(f"\n[Servicio Técnico]: Gracias {self.cliente} por su donación")
 
@@ -196,23 +200,23 @@ class ServicioTecnico:
         self.guardar(datos)
         self.informe(datos)
 
-    # Guardar
+        if not self.continuar():
+            sys.exit()
+
+    # 🔹 GUARDAR
     def guardar(self, datos):
         try:
             with open(ARCHIVO, "r") as f:
                 contenido = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
+        except:
             contenido = []
 
         contenido.append(datos)
 
-        try:
-            with open(ARCHIVO, "w") as f:
-                json.dump(contenido, f, indent=4)
-        except Exception as e:
-            print("[Servicio Técnico]: Error al guardar:", e)
+        with open(ARCHIVO, "w") as f:
+            json.dump(contenido, f, indent=4)
 
-    # Informe
+    # 🔹 INFORME
     def informe(self, datos):
         print("\n--- INFORME ---")
         for clave, valor in datos.items():
