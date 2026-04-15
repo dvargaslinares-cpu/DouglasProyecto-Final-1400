@@ -76,7 +76,7 @@ class ServicioTecnico:
         self.guardar(datos)
         self.informe(datos)
 
-    # EPARAR
+    # REPARAR
     def reparar(self):
         print("\n[Bot]: ¿Qué deseas reparar? 🔧")
         print("1. Pantalla")
